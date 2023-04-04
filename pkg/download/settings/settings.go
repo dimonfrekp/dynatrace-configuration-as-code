@@ -36,7 +36,7 @@ import (
 // Downloader is responsible for downloading Settings 2.0 objects
 type Downloader struct {
 	// client is the settings 2.0 client to be used by the Downloader
-	client client.SettingsClient
+	client DynatraceAPI
 
 	// filters specifies which settings 2.0 objects need special treatment under
 	// certain conditions and need to be skipped
@@ -52,7 +52,7 @@ func WithFilters(filters Filters) func(*Downloader) {
 }
 
 // NewSettingsDownloader creates a new downloader for Settings 2.0 objects
-func NewSettingsDownloader(client client.SettingsClient, opts ...func(*Downloader)) *Downloader {
+func NewSettingsDownloader(client DynatraceAPI, opts ...func(*Downloader)) *Downloader {
 	d := &Downloader{
 		client:  client,
 		filters: defaultSettingsFilters,
@@ -65,12 +65,12 @@ func NewSettingsDownloader(client client.SettingsClient, opts ...func(*Downloade
 
 // Download downloads all settings 2.0 objects for the given schema IDs
 
-func Download(client client.SettingsClient, schemaIDs []string, projectName string) v2.ConfigsPerType {
+func Download(client DynatraceAPI, schemaIDs []string, projectName string) v2.ConfigsPerType {
 	return NewSettingsDownloader(client).Download(schemaIDs, projectName)
 }
 
 // DownloadAll downloads all settings 2.0 objects for a given project
-func DownloadAll(client client.SettingsClient, projectName string) v2.ConfigsPerType {
+func DownloadAll(client DynatraceAPI, projectName string) v2.ConfigsPerType {
 	return NewSettingsDownloader(client).DownloadAll(projectName)
 }
 

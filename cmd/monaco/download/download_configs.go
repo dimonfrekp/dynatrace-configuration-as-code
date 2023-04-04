@@ -173,7 +173,7 @@ type downloadConfigsOptions struct {
 	onlySettings    bool
 }
 
-func doDownloadConfigs(fs afero.Fs, c client.Client, apis api.APIs, opts downloadConfigsOptions) error {
+func doDownloadConfigs(fs afero.Fs, c DynatraceAPI, apis api.APIs, opts downloadConfigsOptions) error {
 	err := preDownloadValidations(fs, opts.downloadOptionsShared)
 	if err != nil {
 		return err
@@ -212,7 +212,7 @@ func validateSpecificAPIs(a api.APIs, apiNames []string) (valid bool, unknownAPI
 	return len(unknownAPIs) == 0, unknownAPIs
 }
 
-func validateSpecificSchemas(c client.SettingsClient, schemas []string) (valid bool, unknownSchemas []string) {
+func validateSpecificSchemas(c DynatraceAPI, schemas []string) (valid bool, unknownSchemas []string) {
 	if len(schemas) == 0 {
 		return true, nil
 	}
@@ -235,7 +235,7 @@ func validateSpecificSchemas(c client.SettingsClient, schemas []string) (valid b
 	return len(unknownSchemas) == 0, unknownSchemas
 }
 
-func downloadConfigs(c client.Client, apis api.APIs, opts downloadConfigsOptions) (project.ConfigsPerType, error) {
+func downloadConfigs(c DynatraceAPI, apis api.APIs, opts downloadConfigsOptions) (project.ConfigsPerType, error) {
 	configObjects := make(project.ConfigsPerType)
 
 	if shouldDownloadClassicConfigs(opts) {
@@ -264,7 +264,7 @@ func shouldDownloadSettings(opts downloadConfigsOptions) bool {
 	return !opts.onlyAPIs && (len(opts.specificAPIs) == 0 || len(opts.specificSchemas) > 0)
 }
 
-func downloadClassicConfigs(c client.Client, apis api.APIs, specificAPIs []string, projectName string) (project.ConfigsPerType, error) {
+func downloadClassicConfigs(c DynatraceAPI, apis api.APIs, specificAPIs []string, projectName string) (project.ConfigsPerType, error) {
 	apisToDownload := getApisToDownload(apis, specificAPIs)
 	if len(apisToDownload) == 0 {
 		return nil, fmt.Errorf("no APIs to download")
@@ -281,7 +281,7 @@ func downloadClassicConfigs(c client.Client, apis api.APIs, specificAPIs []strin
 	return cfgs, nil
 }
 
-func downloadSettings(c client.Client, specificSchemas []string, projectName string) project.ConfigsPerType {
+func downloadSettings(c DynatraceAPI, specificSchemas []string, projectName string) project.ConfigsPerType {
 	if len(specificSchemas) > 0 {
 		log.Debug("Settings to download: \n - %v", strings.Join(specificSchemas, "\n - "))
 		s := settings.Download(c, specificSchemas, projectName)

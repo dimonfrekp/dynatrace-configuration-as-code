@@ -166,7 +166,7 @@ func TestDeploySettingShouldFailUpsert(t *testing.T) {
 		},
 	}
 
-	c := client.NewMockSettingsClient(gomock.NewController(t))
+	c := client.NewMockClient(gomock.NewController(t))
 	c.EXPECT().UpsertSettings(gomock.Any()).Return(client.DynatraceEntity{}, fmt.Errorf("upsert failed"))
 
 	conf := &config.Config{

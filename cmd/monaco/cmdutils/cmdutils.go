@@ -40,7 +40,7 @@ func SilenceUsageCommand() func(cmd *cobra.Command, args []string) {
 // CreateDTClient is driven by data given through a manifest.EnvironmentDefinition to create an appropriate client.Client.
 //
 // In case when flag dryRun is true this factory returns the client.DummyClient.
-func CreateDTClient(url string, a manifest.Auth, dryRun bool, opts ...func(dynatraceClient *client.DynatraceClient)) (client.Client, error) {
+func CreateDTClient(url string, a manifest.Auth, dryRun bool, opts ...func(dynatraceClient *client.DynatraceClient)) (DynatraceAPI, error) {
 	switch {
 	case dryRun:
 		return client.NewDummyClient(), nil

@@ -30,7 +30,7 @@ type DeletePointer struct {
 	ConfigId string
 }
 
-func DeleteConfigs(client client.Client, apis api.APIs, entriesToDelete map[string][]DeletePointer) []error {
+func DeleteConfigs(client DynatraceAPI, apis api.APIs, entriesToDelete map[string][]DeletePointer) []error {
 	errs := make([]error, 0)
 
 	for targetApi, entries := range entriesToDelete {
@@ -51,7 +51,7 @@ func DeleteConfigs(client client.Client, apis api.APIs, entriesToDelete map[stri
 	return errs
 }
 
-func deleteClassicConfig(client client.Client, theApi api.API, entries []DeletePointer, targetApi string) []error {
+func deleteClassicConfig(client DynatraceAPI, theApi api.API, entries []DeletePointer, targetApi string) []error {
 	errors := make([]error, 0)
 
 	values, err := client.ListConfigs(theApi)
@@ -78,7 +78,7 @@ func deleteClassicConfig(client client.Client, theApi api.API, entries []DeleteP
 	return errors
 }
 
-func deleteSettingsObject(c client.Client, entries []DeletePointer) []error {
+func deleteSettingsObject(c DynatraceAPI, entries []DeletePointer) []error {
 	errors := make([]error, 0)
 
 	for _, e := range entries {
@@ -157,7 +157,7 @@ func filterValuesToDelete(entries []DeletePointer, existingValues []client.Value
 	return result, errs
 }
 
-func DeleteAllConfigs(client client.ConfigClient, apis api.APIs) (errors []error) {
+func DeleteAllConfigs(client DynatraceAPI, apis api.APIs) (errors []error) {
 
 	for _, api := range apis {
 		log.Info("Collecting configs of type %s...", api.ID)
@@ -184,7 +184,7 @@ func DeleteAllConfigs(client client.ConfigClient, apis api.APIs) (errors []error
 }
 
 // DeleteAllSettingsObjects deletes all settings objects that can be queried.
-func DeleteAllSettingsObjects(c client.SettingsClient) []error {
+func DeleteAllSettingsObjects(c DynatraceAPI) []error {
 	var errs []error
 
 	schemas, err := c.ListSchemas()

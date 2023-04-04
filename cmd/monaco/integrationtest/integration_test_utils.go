@@ -22,7 +22,6 @@ import (
 	"github.com/dynatrace/dynatrace-configuration-as-code/cmd/monaco/cmdutils"
 	"github.com/dynatrace/dynatrace-configuration-as-code/internal/testutils"
 	"github.com/dynatrace/dynatrace-configuration-as-code/pkg/api"
-	"github.com/dynatrace/dynatrace-configuration-as-code/pkg/client"
 	config "github.com/dynatrace/dynatrace-configuration-as-code/pkg/config/v2"
 	"github.com/dynatrace/dynatrace-configuration-as-code/pkg/manifest"
 	project "github.com/dynatrace/dynatrace-configuration-as-code/pkg/project/v2"
@@ -32,8 +31,13 @@ import (
 	"testing"
 )
 
-func CreateDynatraceClient(t *testing.T, environment manifest.EnvironmentDefinition) client.Client {
+type DynatraceAPI interface {
+	cmdutils.SettingsClient
+	cmdutils.EntitiesClient
+	cmdutils.ConfigClient
+}
 
+func CreateDynatraceClient(t *testing.T, environment manifest.EnvironmentDefinition) DynatraceAPI {
 	c, err := cmdutils.CreateDTClient(environment.URL.Value, environment.Auth, false)
 	assert.NilError(t, err, "failed to create test client")
 

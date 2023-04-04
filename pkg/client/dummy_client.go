@@ -43,10 +43,6 @@ type DummyClient struct {
 	RequestOutputDir string
 }
 
-var (
-	_ Client = (*DummyClient)(nil)
-)
-
 // NewDummyClient creates a new DummyClient
 func NewDummyClient() *DummyClient {
 	return &DummyClient{Entries: map[api.API][]DataEntry{}}

@@ -129,7 +129,7 @@ func AssertAllConfigsAvailability(t *testing.T, fs afero.Fs, manifestPath string
 	}
 }
 
-func assertConfig(t *testing.T, client client.ConfigClient, theApi api.API, environment manifest.EnvironmentDefinition, shouldBeAvailable bool, config config.Config, name string) {
+func assertConfig(t *testing.T, client DynatraceAPI, theApi api.API, environment manifest.EnvironmentDefinition, shouldBeAvailable bool, config config.Config, name string) {
 
 	configType := config.Coordinate.Type
 
@@ -157,7 +157,7 @@ func assertConfig(t *testing.T, client client.ConfigClient, theApi api.API, envi
 	}
 }
 
-func assertSetting(t *testing.T, c client.SettingsClient, typ config.SettingsType, environment manifest.EnvironmentDefinition, shouldBeAvailable bool, config config.Config) {
+func assertSetting(t *testing.T, c DynatraceAPI, typ config.SettingsType, environment manifest.EnvironmentDefinition, shouldBeAvailable bool, config config.Config) {
 	expectedExtId := idutils.GenerateExternalID(typ.SchemaId, config.Coordinate.ConfigId)
 	objects, err := c.ListSettings(typ.SchemaId, client.ListSettingsOptions{DiscardValue: true, Filter: func(o client.DownloadSettingsObject) bool { return o.ExternalId == expectedExtId }})
 	assert.NilError(t, err)

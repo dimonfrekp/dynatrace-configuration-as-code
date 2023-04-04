@@ -121,7 +121,7 @@ func (d DefaultCommand) DownloadEntities(fs afero.Fs, cmdOptions entitiesDirectD
 	return doDownloadEntities(fs, dtClient, options)
 }
 
-func doDownloadEntities(fs afero.Fs, dtClient client.Client, opts downloadEntitiesOptions) error {
+func doDownloadEntities(fs afero.Fs, dtClient DynatraceAPI, opts downloadEntitiesOptions) error {
 	err := preDownloadValidations(fs, opts.downloadOptionsShared)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func doDownloadEntities(fs afero.Fs, dtClient client.Client, opts downloadEntiti
 	return writeConfigs(downloadedConfigs, opts.downloadOptionsShared, fs)
 }
 
-func downloadEntities(dtClient client.Client, opts downloadEntitiesOptions) project.ConfigsPerType {
+func downloadEntities(dtClient DynatraceAPI, opts downloadEntitiesOptions) project.ConfigsPerType {
 
 	var entitiesObjects project.ConfigsPerType
 

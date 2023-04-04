@@ -48,7 +48,7 @@ func CleanupIntegrationTest(t *testing.T, fs afero.Fs, manifestPath string, load
 	}
 }
 
-func cleanupConfigs(t *testing.T, apis api.APIs, c client.ConfigClient, suffix string) {
+func cleanupConfigs(t *testing.T, apis api.APIs, c DynatraceAPI, suffix string) {
 	for _, api := range apis {
 		if api.ID == "calculated-metrics-log" {
 			t.Logf("Skipping cleanup of legacy log monitoring API")
@@ -74,7 +74,7 @@ func cleanupConfigs(t *testing.T, apis api.APIs, c client.ConfigClient, suffix s
 	}
 }
 
-func cleanupSettings(t *testing.T, fs afero.Fs, manifestPath string, loadedManifest manifest.Manifest, environment string, c client.SettingsClient) {
+func cleanupSettings(t *testing.T, fs afero.Fs, manifestPath string, loadedManifest manifest.Manifest, environment string, c DynatraceAPI) {
 	projects := LoadProjects(t, fs, manifestPath, loadedManifest)
 	for _, p := range projects {
 		cfgsForEnv, ok := p.Configs[environment]
@@ -92,7 +92,7 @@ func cleanupSettings(t *testing.T, fs afero.Fs, manifestPath string, loadedManif
 	}
 }
 
-func deleteSettingsObjects(t *testing.T, schema, externalID string, c client.SettingsClient) {
+func deleteSettingsObjects(t *testing.T, schema, externalID string, c DynatraceAPI) {
 	objects, err := c.ListSettings(schema, client.ListSettingsOptions{DiscardValue: true, Filter: func(o client.DownloadSettingsObject) bool { return o.ExternalId == externalID }})
 	if err != nil {
 		t.Logf("Failed to cleanup test config: could not fetch settings 2.0 objects with schema ID %s: %v", schema, err)

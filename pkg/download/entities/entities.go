@@ -35,11 +35,11 @@ import (
 
 // Downloader is responsible for downloading Settings 2.0 objects
 type Downloader struct {
-	client client.EntitiesClient
+	client DynatraceAPI
 }
 
 // NewEntitiesDownloader creates a new downloader for Settings 2.0 objects
-func NewEntitiesDownloader(c client.EntitiesClient) *Downloader {
+func NewEntitiesDownloader(c DynatraceAPI) *Downloader {
 	return &Downloader{
 		client: c,
 	}
@@ -47,12 +47,12 @@ func NewEntitiesDownloader(c client.EntitiesClient) *Downloader {
 
 // Download downloads all entities objects for the given entities Types
 
-func Download(c client.EntitiesClient, specificEntitiesTypes []string, projectName string) v2.ConfigsPerType {
+func Download(c DynatraceAPI, specificEntitiesTypes []string, projectName string) v2.ConfigsPerType {
 	return NewEntitiesDownloader(c).Download(specificEntitiesTypes, projectName)
 }
 
 // DownloadAll downloads all entities objects for a given project
-func DownloadAll(c client.EntitiesClient, projectName string) v2.ConfigsPerType {
+func DownloadAll(c DynatraceAPI, projectName string) v2.ConfigsPerType {
 	return NewEntitiesDownloader(c).DownloadAll(projectName)
 }
 
