@@ -521,7 +521,7 @@ func Test_loadProject_returnsErrorIfProjectPathDoesNotExist(t *testing.T) {
 		Path: "this/does/not/exist",
 	}
 
-	_, gotErrs := loadProject(fs, ctx, definition, []manifest.EnvironmentDefinition{})
+	_, gotErrs := loadProject(fs, ctx, definition)
 	assert.Assert(t, len(gotErrs) == 1)
 	assert.ErrorContains(t, gotErrs[0], "filepath `this/does/not/exist` does not exist")
 }

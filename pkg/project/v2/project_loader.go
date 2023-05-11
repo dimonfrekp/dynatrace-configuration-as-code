@@ -64,7 +64,6 @@ func newDuplicateConfigIdentifierError(c config.Config) DuplicateConfigIdentifie
 }
 
 func LoadProjects(fs afero.Fs, context ProjectLoaderContext) ([]Project, []error) {
-	environments := toEnvironmentSlice(context.Manifest.Environments)
 	projects := make([]Project, 0)
 
 	var workingDirFs afero.Fs
@@ -78,7 +77,7 @@ func LoadProjects(fs afero.Fs, context ProjectLoaderContext) ([]Project, []error
 	var errors []error
 
 	for _, projectDefinition := range context.Manifest.Projects {
-		project, projectErrors := loadProject(workingDirFs, context, projectDefinition, environments)
+		project, projectErrors := loadProject(workingDirFs, context, projectDefinition)
 
 		if projectErrors != nil {
 			errors = append(errors, projectErrors...)
@@ -105,8 +104,7 @@ func toEnvironmentSlice(environments map[string]manifest.EnvironmentDefinition) 
 	return result
 }
 
-func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition,
-	environments []manifest.EnvironmentDefinition) (Project, []error) {
+func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition) (Project, []error) {
 
 	exists, err := afero.Exists(fs, projectDefinition.Path)
 	if err != nil {
@@ -118,7 +116,7 @@ func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition ma
 
 	log.Debug("Loading project `%s` (%s)...", projectDefinition.Name, projectDefinition.Path)
 
-	configs, errors := loadConfigsOfProject(fs, context, projectDefinition, environments)
+	configs, errors := loadConfigsOfProject(fs, context, projectDefinition)
 
 	if d := findDuplicatedConfigIdentifiers(configs); d != nil {
 		for _, c := range d {
@@ -148,7 +146,7 @@ func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition ma
 	}, nil
 }
 
-func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition, environments []manifest.EnvironmentDefinition) ([]config.Config, []error) {
+func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition) ([]config.Config, []error) {
 	var configs []config.Config
 	var errors []error
 
@@ -167,6 +165,7 @@ func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefi
 			return nil
 		}
 
+		environments := toEnvironmentSlice(context.Manifest.Environments)
 		loaded, errs := config.LoadConfigs(fs, &config.LoaderContext{
 			ProjectId:       projectDefinition.Name,
 			Path:            path,
