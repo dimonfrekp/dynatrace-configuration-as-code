@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"github.com/dynatrace/dynatrace-configuration-as-code/internal/log"
 	"github.com/dynatrace/dynatrace-configuration-as-code/internal/slices"
+	"github.com/dynatrace/dynatrace-configuration-as-code/pkg/multierr"
 	"os"
 	"strings"
 
@@ -63,7 +64,7 @@ func newDuplicateConfigIdentifierError(c config.Config) DuplicateConfigIdentifie
 	}
 }
 
-func LoadProjects(fs afero.Fs, context ProjectLoaderContext) ([]Project, []error) {
+func LoadProjects(fs afero.Fs, context ProjectLoaderContext) ([]Project, multierr.MultiError) {
 	projects := make([]Project, 0)
 
 	var workingDirFs afero.Fs
@@ -74,13 +75,13 @@ func LoadProjects(fs afero.Fs, context ProjectLoaderContext) ([]Project, []error
 		workingDirFs = afero.NewBasePathFs(fs, context.WorkingDir)
 	}
 
-	var errors []error
+	var errors multierr.MultiError
 
 	for _, projectDefinition := range context.Manifest.Projects {
 		project, projectErrors := loadProject(workingDirFs, context, projectDefinition)
 
 		if projectErrors != nil {
-			errors = append(errors, projectErrors...)
+			errors = errors.AppendSl(projectErrors)
 			continue
 		}
 
@@ -104,14 +105,14 @@ func toEnvironmentSlice(environments map[string]manifest.EnvironmentDefinition) 
 	return result
 }
 
-func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition) (Project, []error) {
+func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition) (Project, multierr.MultiError) {
 
 	exists, err := afero.Exists(fs, projectDefinition.Path)
 	if err != nil {
-		return Project{}, []error{fmt.Errorf("failed to load project `%s` (%s): %w", projectDefinition.Name, projectDefinition.Path, err)}
+		return Project{}, multierr.New(fmt.Errorf("failed to load project `%s` (%s): %w", projectDefinition.Name, projectDefinition.Path, err))
 	}
 	if !exists {
-		return Project{}, []error{fmt.Errorf("failed to load project `%s`: filepath `%s` does not exist", projectDefinition.Name, projectDefinition.Path)}
+		return Project{}, multierr.New(fmt.Errorf("failed to load project `%s`: filepath `%s` does not exist", projectDefinition.Name, projectDefinition.Path))
 	}
 
 	log.Debug("Loading project `%s` (%s)...", projectDefinition.Name, projectDefinition.Path)
@@ -146,9 +147,9 @@ func loadProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition ma
 	}, nil
 }
 
-func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition) ([]config.Config, []error) {
+func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefinition manifest.ProjectDefinition) ([]config.Config, multierr.MultiError) {
 	var configs []config.Config
-	var errors []error
+	var errors multierr.MultiError
 
 	err := afero.Walk(fs, projectDefinition.Path, func(path string, info os.FileInfo, err error) error {
 
@@ -175,7 +176,7 @@ func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefi
 		})
 
 		if errs != nil {
-			errors = append(errors, errs...)
+			errors = errors.AppendSl(errs)
 			return nil
 		}
 
@@ -185,7 +186,7 @@ func loadConfigsOfProject(fs afero.Fs, context ProjectLoaderContext, projectDefi
 	})
 
 	if err != nil {
-		errors = append(errors, err)
+		errors = errors.Append(err)
 	}
 
 	return configs, errors
