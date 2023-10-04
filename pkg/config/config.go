@@ -83,14 +83,6 @@ func (ClassicApiType) ID() TypeId {
 	return ClassicApiTypeId
 }
 
-type EntityType struct {
-	EntitiesType string
-}
-
-func (EntityType) ID() TypeId {
-	return EntityTypeId
-}
-
 // AutomationResource defines which resource is an AutomationType
 type AutomationResource string
 
