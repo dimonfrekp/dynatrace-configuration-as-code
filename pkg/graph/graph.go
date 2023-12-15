@@ -113,7 +113,7 @@ func (graphs ConfigGraphPerEnvironment) GetIndependentlySortedConfigs(environmen
 		return nil, fmt.Errorf("no dependency graph exists for envrionment %s", environment)
 	}
 
-	components := findConnectedComponents(g)
+	components := FindConnectedComponents(g)
 	errs := make(SortingErrors, 0, len(components))
 	sortedComponents := make([]SortedComponent, len(components))
 	for i, subGraph := range components {
@@ -140,7 +140,7 @@ func (graphs ConfigGraphPerEnvironment) GetIndependentlySortedConfigs(environmen
 	return sortedComponents, nil
 }
 
-func findConnectedComponents(d *simple.DirectedGraph) []*simple.DirectedGraph {
+func FindConnectedComponents(d *simple.DirectedGraph) []*simple.DirectedGraph {
 	u := buildUndirectedGraph(d)
 
 	var graphs []*simple.DirectedGraph
