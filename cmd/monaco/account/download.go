@@ -71,6 +71,13 @@ func downloadAll(fs afero.Fs, opts *downloadOpts) error {
 		}
 	}
 
+	// all environments failed to download
+	if len(failedDownloads) == len(accountClients) {
+		log.Error("No resources were downloaded. No project will be created.")
+
+		return errors.New("failed to download any resources")
+	}
+
 	if err := writeManifest(fs, opts, accs); err != nil {
 		log.Error("failed to persist manifest: %v", err)
 	}
@@ -80,7 +87,7 @@ func downloadAll(fs afero.Fs, opts *downloadOpts) error {
 		for _, t := range failedDownloads {
 			es = append(es, t.String())
 		}
-		return fmt.Errorf("failed to download accounts %q", es)
+		return fmt.Errorf("failed to download resources from %q", es)
 	}
 
 	return nil
