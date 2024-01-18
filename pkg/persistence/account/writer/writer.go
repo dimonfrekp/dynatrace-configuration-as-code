@@ -90,16 +90,18 @@ func Write(writerContext Context, resources account.Resources) error {
 	return nil
 }
 
-func toPersistencePolicies(policies map[string]account.Policy) []persistence.Policy {
+func toPersistencePolicies(policies []account.Policy) []persistence.Policy {
 	out := make([]persistence.Policy, 0, len(policies))
 	for _, v := range policies {
 		var level persistence.PolicyLevel
 		switch tV := v.Level.(type) {
 		case account.PolicyLevelAccount:
-			level.Type = tV.Type
+			level.Type = persistence.PolicyLevelAccount
 		case account.PolicyLevelEnvironment:
-			level.Type = tV.Type
+			level.Type = persistence.PolicyLevelEnvironment
 			level.Environment = tV.Environment
+		default:
+			panic("unable to convert persistence model")
 		}
 
 		out = append(out, persistence.Policy{

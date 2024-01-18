@@ -33,10 +33,10 @@ func loadResources(fs afero.Fs, workingDir string, projects manifest.ProjectDefi
 			return nil, err
 		}
 		for _, pol := range res.Policies {
-			if _, exists := resources.Policies[pol.ID]; exists {
+			if resources.Policies.Contains(pol.ID) {
 				return nil, fmt.Errorf("policy with id %q already defined in another project", pol.ID)
 			}
-			resources.Policies[pol.ID] = pol
+			resources.Policies = append(resources.Policies, pol)
 		}
 
 		for _, gr := range res.Groups {

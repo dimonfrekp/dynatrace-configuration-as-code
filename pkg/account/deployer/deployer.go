@@ -197,7 +197,7 @@ func fetchResources(fetchFunc func() error, wg *sync.WaitGroup, errCh chan<- err
 	errCh <- fetchFunc()
 }
 
-func (d *AccountDeployer) deployPolicies(policies map[string]account.Policy, dispatcher *Dispatcher) { // nolint:dupl
+func (d *AccountDeployer) deployPolicies(policies []account.Policy, dispatcher *Dispatcher) { // nolint:dupl
 	for _, policy := range policies {
 		policy := policy
 		deployPolicyJob := func(wg *sync.WaitGroup, errCh chan error) {

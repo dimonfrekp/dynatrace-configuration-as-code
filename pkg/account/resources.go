@@ -18,38 +18,20 @@ package account
 
 func NewAccountManagementResources() *Resources {
 	resources := Resources{
-		Groups:   make(map[GroupId]Group),
-		Policies: make(map[PolicyId]Policy),
-		Users:    make(map[UserId]User),
+		Groups: make(map[GroupId]Group),
+		Users:  make(map[UserId]User),
 	}
 	return &resources
 }
 
 type (
-	PolicyId    = string
-	GroupId     = string
-	UserId      = string
-	PolicyLevel = any // either PolicyLevelAccount or PolicyLevelEnvironment is allowed
+	GroupId = string
+	UserId  = string
 
 	Resources struct {
-		Policies map[PolicyId]Policy
+		Policies Policies
 		Groups   map[GroupId]Group
 		Users    map[UserId]User
-	}
-	Policy struct {
-		ID             string
-		Name           string
-		Level          PolicyLevel
-		Description    string
-		Statement      string
-		OriginObjectID string
-	}
-	PolicyLevelAccount struct {
-		Type string
-	}
-	PolicyLevelEnvironment struct {
-		Type        string
-		Environment string
 	}
 
 	Group struct {
