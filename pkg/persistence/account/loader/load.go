@@ -142,9 +142,9 @@ func transform(resources *persistence.Resources) *account.Resources {
 	transformLevel := func(level persistence.PolicyLevel) any {
 		switch level.Type {
 		case persistence.PolicyLevelAccount:
-			return account.PolicyLevelAccount{Type: level.Type}
+			return account.PolicyLevelAccount{}
 		case persistence.PolicyLevelEnvironment:
-			return account.PolicyLevelEnvironment{Type: level.Type, Environment: level.Environment}
+			return account.PolicyLevelEnvironment{Environment: level.Environment}
 		default:
 			panic("unable to convert persistence model")
 		}
@@ -166,19 +166,18 @@ func transform(resources *persistence.Resources) *account.Resources {
 	}
 
 	inMemResources := account.Resources{
-		Policies: make(map[account.PolicyId]account.Policy),
-		Groups:   make(map[account.GroupId]account.Group),
-		Users:    make(map[account.UserId]account.User),
+		Groups: make(map[account.GroupId]account.Group),
+		Users:  make(map[account.UserId]account.User),
 	}
-	for id, v := range resources.Policies {
-		inMemResources.Policies[id] = account.Policy{
+	for _, v := range resources.Policies {
+		inMemResources.Policies = append(inMemResources.Policies, account.Policy{
 			ID:             v.ID,
 			Name:           v.Name,
 			Level:          transformLevel(v.Level),
 			Description:    v.Description,
 			Statement:      v.Policy,
 			OriginObjectID: v.OriginObjectID,
-		}
+		})
 	}
 	for id, v := range resources.Groups {
 		var acc *account.Account

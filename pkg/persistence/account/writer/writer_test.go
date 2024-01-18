@@ -41,7 +41,7 @@ func TestWriteAccountResources(t *testing.T) {
 			"only users",
 			account.Resources{
 				Users: map[account.UserId]account.User{
-					"monaco@dynatrace.com": account.User{
+					"monaco@dynatrace.com": {
 						Email: "monaco@dynatrace.com",
 						Groups: []account.Ref{
 							account.Reference{Id: "my-group"},
@@ -223,13 +223,13 @@ func TestWriteAccountResources(t *testing.T) {
 		{
 			"only policies",
 			account.Resources{
-				Policies: map[account.PolicyId]account.Policy{
-					"my-policy": {
+				Policies: account.Policies{
+					{
 						ID:          "my-policy",
 						Name:        "My Policy",
-						Level:       account.PolicyLevelAccount{Type: "account"},
 						Description: "This is my policy. There's many like it, but this one is mine.",
 						Statement:   "ALLOW a:b:c;",
+						Level:       account.PolicyLevelAccount{},
 					},
 				},
 			},
@@ -247,7 +247,7 @@ func TestWriteAccountResources(t *testing.T) {
 			"full resources",
 			account.Resources{
 				Users: map[account.UserId]account.User{
-					"monaco@dynatrace.com": account.User{
+					"monaco@dynatrace.com": {
 						Email: "monaco@dynatrace.com",
 						Groups: []account.Ref{
 							account.Reference{Id: "my-group"},
@@ -283,13 +283,13 @@ func TestWriteAccountResources(t *testing.T) {
 						},
 					},
 				},
-				Policies: map[account.PolicyId]account.Policy{
-					"my-policy": {
+				Policies: account.Policies{
+					{
 						ID:          "my-policy",
 						Name:        "My Policy",
-						Level:       account.PolicyLevelAccount{Type: "account"},
 						Description: "This is my policy. There's many like it, but this one is mine.",
 						Statement:   "ALLOW a:b:c;",
+						Level:       account.PolicyLevelAccount{},
 					},
 				},
 			},
@@ -338,7 +338,7 @@ func TestWriteAccountResources(t *testing.T) {
 			"with origin objectIDs",
 			account.Resources{
 				Users: map[account.UserId]account.User{
-					"monaco@dynatrace.com": account.User{
+					"monaco@dynatrace.com": {
 						Email: "monaco@dynatrace.com",
 						Groups: []account.Ref{
 							account.Reference{Id: "my-group"},
@@ -375,14 +375,14 @@ func TestWriteAccountResources(t *testing.T) {
 						},
 					},
 				},
-				Policies: map[account.PolicyId]account.Policy{
-					"my-policy": {
+				Policies: account.Policies{
+					{
 						ID:             "my-policy",
 						OriginObjectID: "ObjectID-456",
 						Name:           "My Policy",
-						Level:          account.PolicyLevelAccount{Type: "account"},
 						Description:    "This is my policy. There's many like it, but this one is mine.",
 						Statement:      "ALLOW a:b:c;",
+						Level:          account.PolicyLevelAccount{},
 					},
 				},
 			},
@@ -433,14 +433,14 @@ func TestWriteAccountResources(t *testing.T) {
 			"file contents are sorted",
 			account.Resources{
 				Users: map[account.UserId]account.User{
-					"first@dynatrace.com": account.User{
+					"first@dynatrace.com": {
 						Email: "first@dynatrace.com",
 						Groups: []account.Ref{
 							account.Reference{Id: "my-group"},
 							account.StrReference("Log viewer"),
 						},
 					},
-					"second@dynatrace.com": account.User{
+					"second@dynatrace.com": {
 						Email: "second@dynatrace.com",
 						Groups: []account.Ref{
 							account.Reference{Id: "my-group"},
@@ -505,20 +505,20 @@ func TestWriteAccountResources(t *testing.T) {
 						},
 					},
 				},
-				Policies: map[account.PolicyId]account.Policy{
-					"second-policy": {
+				Policies: account.Policies{
+					{
 						ID:          "second-policy",
 						Name:        "My other Policy",
-						Level:       account.PolicyLevelAccount{Type: "account"},
 						Description: "This is my policy. There's many like it, but this one is mine.",
 						Statement:   "ALLOW a:b:c;",
+						Level:       account.PolicyLevelAccount{},
 					},
-					"first-policy": {
+					{
 						ID:          "first-policy",
 						Name:        "My Policy",
-						Level:       account.PolicyLevelAccount{Type: "account"},
 						Description: "This is my policy. There's many like it, but this one is mine.",
 						Statement:   "ALLOW a:b:c;",
+						Level:       account.PolicyLevelAccount{},
 					},
 				},
 			},

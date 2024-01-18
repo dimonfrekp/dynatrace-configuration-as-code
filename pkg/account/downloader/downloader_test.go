@@ -44,7 +44,7 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 			name:  "empty account",
 			given: mockData{},
 			expected: account.Resources{
-				Policies: make(map[account.PolicyId]account.Policy),
+				Policies: account.Policies{},
 				Groups:   make(map[account.GroupId]account.Group),
 				Users:    make(map[account.UserId]account.User),
 			},
@@ -59,19 +59,17 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 						Description: "some description",
 						LevelType:   "account",
 					}},
-				policieDef: &accountmanagement.LevelPolicyDto{
-					StatementQuery: "THIS IS statement",
-				},
+				policieDef: &accountmanagement.LevelPolicyDto{StatementQuery: "THIS IS statement"},
 			},
 			expected: account.Resources{
-				Policies: map[account.PolicyId]account.Policy{
-					toID("test policy - tenant"): {
+				Policies: []account.Policy{
+					{
 						ID:             toID("test policy - tenant"),
 						Name:           "test policy - tenant",
-						Level:          account.PolicyLevelAccount{Type: "account"},
 						Description:    "some description",
 						Statement:      "THIS IS statement",
 						OriginObjectID: "2ff9314d-3c97-4607-bd49-460a53de1390",
+						Level:          account.PolicyLevelAccount{},
 					},
 				},
 				Groups: make(map[account.GroupId]account.Group),
@@ -97,17 +95,14 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 			},
 			expected: account.Resources{
-				Policies: map[account.PolicyId]account.Policy{
-					toID("test policy - tenant"): {
-						ID:   toID("test policy - tenant"),
-						Name: "test policy - tenant",
-						Level: account.PolicyLevelEnvironment{
-							Type:        "environment",
-							Environment: "abc12345",
-						},
+				Policies: []account.Policy{
+					{
+						ID:             toID("test policy - tenant"),
+						Name:           "test policy - tenant",
 						Description:    "some description",
 						Statement:      "THIS IS statement",
 						OriginObjectID: "2ff9314d-3c97-4607-bd49-460a53de1390",
+						Level:          account.PolicyLevelEnvironment{Environment: "abc12345"},
 					},
 				},
 				Groups: make(map[account.GroupId]account.Group),
@@ -124,9 +119,10 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 					LevelId:     "",
 					LevelType:   "global",
 				}},
+				policieDef: &accountmanagement.LevelPolicyDto{},
 			},
 			expected: account.Resources{
-				Policies: map[account.PolicyId]account.Policy{},
+				Policies: account.Policies{},
 				Groups:   make(map[account.GroupId]account.Group),
 				Users:    make(map[account.UserId]account.User),
 			},
@@ -151,7 +147,7 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				userGroups: &accountmanagement.GroupUserDto{Email: "usert@some.org"},
 			},
 			expected: account.Resources{
-				Policies: make(map[account.PolicyId]account.Policy),
+				Policies: account.Policies{},
 				Groups:   make(map[account.GroupId]account.Group),
 				Users: map[account.UserId]account.User{
 					"usert@some.org": {Email: "usert@some.org"},
@@ -172,7 +168,7 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 			},
 			expected: account.Resources{
-				Policies: map[string]account.Policy{},
+				Policies: account.Policies{},
 				Groups: map[account.GroupId]account.Group{
 					toID("test group"): {
 						ID:             toID("test group"),
@@ -204,7 +200,7 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				}},
 			},
 			expected: account.Resources{
-				Policies: map[account.PolicyId]account.Policy{},
+				Policies: account.Policies{},
 				Groups: map[account.GroupId]account.Group{
 					toID("test group"): {
 						ID:             toID("test group"),
@@ -270,18 +266,18 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 			},
 			expected: account.Resources{
-				Policies: map[account.PolicyId]account.Policy{
-					toID("account policy"): {
+				Policies: []account.Policy{
+					{
 						ID:             toID("account policy"),
 						Name:           "account policy",
-						Level:          account.PolicyLevelAccount{Type: "account"},
 						OriginObjectID: "2ff9314d-3c97-4607-bd49-460a53de1390",
+						Level:          account.PolicyLevelAccount{},
 					},
-					toID("environment policy"): account.Policy{
+					{
 						ID:             toID("environment policy"),
 						Name:           "environment policy",
-						Level:          account.PolicyLevelEnvironment{Type: "environment", Environment: "abc12345"},
 						OriginObjectID: "bc7df7b7-9387-45ff-974f-56573c072e4c",
+						Level:          account.PolicyLevelEnvironment{Environment: "abc12345"},
 					},
 				},
 				Groups: map[account.GroupId]account.Group{
@@ -389,7 +385,7 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 			},
 			expected: account.Resources{
-				Policies: map[account.PolicyId]account.Policy{},
+				Policies: account.Policies{},
 				Groups: map[account.GroupId]account.Group{
 					toID("test group"): {
 						ID:             toID("test group"),
