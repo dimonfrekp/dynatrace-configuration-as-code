@@ -298,7 +298,7 @@ func (d *AccountDeployer) upsertPolicy(ctx context.Context, policy account.Polic
 	data := accountmanagement.CreateOrUpdateLevelPolicyRequestDto{
 		Name:           policy.Name,
 		Description:    policy.Description,
-		StatementQuery: policy.Policy,
+		StatementQuery: policy.Statement,
 	}
 
 	return d.accClient.upsertPolicy(ctx, policyLevel, policyLevelID, policy.OriginObjectID, data)

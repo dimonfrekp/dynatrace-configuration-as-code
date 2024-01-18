@@ -176,7 +176,7 @@ func transform(resources *persistence.Resources) *account.Resources {
 			Name:           v.Name,
 			Level:          transformLevel(v.Level),
 			Description:    v.Description,
-			Policy:         v.Policy,
+			Statement:      v.Policy,
 			OriginObjectID: v.OriginObjectID,
 		}
 	}

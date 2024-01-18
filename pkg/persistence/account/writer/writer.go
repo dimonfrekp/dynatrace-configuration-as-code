@@ -107,7 +107,7 @@ func toPersistencePolicies(policies map[string]account.Policy) []persistence.Pol
 			Name:           v.Name,
 			Level:          level,
 			Description:    v.Description,
-			Policy:         v.Policy,
+			Policy:         v.Statement,
 			OriginObjectID: v.OriginObjectID,
 		})
 	}

@@ -77,7 +77,7 @@ func toAccountPolicy(dto *accountmanagement.PolicyOverview, dtoDef *accountmanag
 		Name:           dto.Name,
 		Level:          toAccountPolicyLevel(dto),
 		Description:    dto.Description,
-		Policy:         dtoDef.StatementQuery,
+		Statement:      dtoDef.StatementQuery,
 		OriginObjectID: dto.Uuid,
 	}
 }
