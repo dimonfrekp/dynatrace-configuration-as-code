@@ -37,6 +37,9 @@ func New(accountInfo *account.AccountInfo, client *accounts.Client) *Downloader 
 	}
 }
 
+//resources: account/tenant/managementZone; policy/permission; groups; users
+//bindings: account/tenant/managementZone-policy/permission-group; user-group
+
 func (a *Downloader) DownloadResources(ctx context.Context) (*account.Resources, error) {
 	log.WithCtxFields(ctx).Info("Starting download")
 

@@ -41,7 +41,7 @@ type (
 		Name           string
 		Level          PolicyLevel
 		Description    string
-		Policy         string
+		Statement      string
 		OriginObjectID string
 	}
 	PolicyLevelAccount struct {
