@@ -25,10 +25,20 @@ import (
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/pkg/account/downloader/internal/http"
 )
 
-type Downloader struct {
-	httpClient  httpClient
-	accountInfo *account.AccountInfo
-}
+type (
+	Downloader struct {
+		httpClient  httpClient
+		accountInfo *account.AccountInfo
+	}
+
+	resources []resource
+	resource  interface {
+		originID() string
+		asRef() account.Ref
+	}
+)
+
+var _ httpClient = (*http.Client)(nil)
 
 func New(accountInfo *account.AccountInfo, client *accounts.Client) *Downloader {
 	return &Downloader{
@@ -37,23 +47,39 @@ func New(accountInfo *account.AccountInfo, client *accounts.Client) *Downloader 
 	}
 }
 
+func (rs resources) refOn(originID ...string) []account.Ref {
+	var retVal []account.Ref
+	for _, r := range rs {
+		for _, id := range originID {
+			if r.originID() == id {
+				retVal = append(retVal, r.asRef())
+				break
+			}
+		}
+	}
+	return retVal
+}
+
 //resources: account/tenant/managementZone; policy/permission; groups; users
 //bindings: account/tenant/managementZone-policy/permission-group; user-group
 
 func (a *Downloader) DownloadResources(ctx context.Context) (*account.Resources, error) {
 	log.WithCtxFields(ctx).Info("Starting download")
+	var res resources
 
-	tenants, err := a.environments(ctx)
+	tenants, r1, err := a.environments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch environments: %w", err)
 	}
+	res = append(res, r1...)
 
-	policies, err := a.policies(ctx)
+	ps, err := a.policies(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch policies: %w", err)
 	}
+	res = append(res, ps...)
 
-	groups, err := a.groups(ctx, policies, tenants)
+	groups, err := a.groups(ctx, res, tenants)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch groups: %w", err)
 	}
@@ -66,7 +92,7 @@ func (a *Downloader) DownloadResources(ctx context.Context) (*account.Resources,
 	r := account.Resources{
 		Users:    users.asAccountUsers(),
 		Groups:   groups.asAccountGroups(),
-		Policies: policies.asAccountPolicies(),
+		Policies: res.asAccountPolicies(),
 	}
 
 	return &r, nil

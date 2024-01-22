@@ -44,9 +44,8 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 			name:  "empty account",
 			given: mockData{},
 			expected: account.Resources{
-				Policies: account.Policies{},
-				Groups:   make(map[account.GroupId]account.Group),
-				Users:    make(map[account.UserId]account.User),
+				Groups: make(map[account.GroupId]account.Group),
+				Users:  make(map[account.UserId]account.User),
 			},
 		},
 		{
@@ -122,9 +121,8 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				policieDef: &accountmanagement.LevelPolicyDto{},
 			},
 			expected: account.Resources{
-				Policies: account.Policies{},
-				Groups:   make(map[account.GroupId]account.Group),
-				Users:    make(map[account.UserId]account.User),
+				Groups: make(map[account.GroupId]account.Group),
+				Users:  make(map[account.UserId]account.User),
 			},
 		},
 		{
@@ -147,8 +145,7 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				userGroups: &accountmanagement.GroupUserDto{Email: "usert@some.org"},
 			},
 			expected: account.Resources{
-				Policies: account.Policies{},
-				Groups:   make(map[account.GroupId]account.Group),
+				Groups: make(map[account.GroupId]account.Group),
 				Users: map[account.UserId]account.User{
 					"usert@some.org": {Email: "usert@some.org"},
 				},
@@ -168,7 +165,6 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 			},
 			expected: account.Resources{
-				Policies: account.Policies{},
 				Groups: map[account.GroupId]account.Group{
 					toID("test group"): {
 						ID:             toID("test group"),
@@ -200,7 +196,6 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				}},
 			},
 			expected: account.Resources{
-				Policies: account.Policies{},
 				Groups: map[account.GroupId]account.Group{
 					toID("test group"): {
 						ID:             toID("test group"),
@@ -385,7 +380,6 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 			},
 			expected: account.Resources{
-				Policies: account.Policies{},
 				Groups: map[account.GroupId]account.Group{
 					toID("test group"): {
 						ID:             toID("test group"),

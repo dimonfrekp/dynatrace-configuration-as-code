@@ -26,12 +26,20 @@ import (
 )
 
 type (
-	Policies []policy
-
 	policy account.Policy
 )
 
-func (a *Downloader) policies(ctx context.Context) (Policies, error) {
+var _ resource = (*policy)(nil)
+
+func (p *policy) originID() string {
+	return p.OriginObjectID
+}
+
+func (p *policy) asRef() account.Ref {
+	return ((*account.Policy)(p)).AsRef()
+}
+
+func (a *Downloader) policies(ctx context.Context) (resources, error) {
 	log.WithCtxFields(ctx).Info("Downloading policies")
 	dtos, err := a.httpClient.GetPolicies(ctx, a.accountInfo.AccountUUID)
 	if err != nil {
@@ -39,7 +47,7 @@ func (a *Downloader) policies(ctx context.Context) (Policies, error) {
 	}
 	log.WithCtxFields(ctx).Debug("Downloaded %d policies (global + custom)", len(dtos))
 
-	retVal := make(Policies, 0, len(dtos))
+	var retVal resources
 	for i := range dtos {
 		log.WithCtxFields(ctx).Debug("Downloading definition for policy %q (uuid: %q)", dtos[i].Name, dtos[i].Uuid)
 		dtoDef, err := a.httpClient.GetPolicyDefinition(ctx, dtos[i])
@@ -50,15 +58,15 @@ func (a *Downloader) policies(ctx context.Context) (Policies, error) {
 			return nil, fmt.Errorf("failed to get the definition for the policy %q (uuid: %q) from DT", dtos[i].Name, dtos[i].Uuid)
 		}
 
-		retVal = append(retVal, (policy)(dtoToAccountPolicy(&dtos[i], dtoDef)))
+		retVal = append(retVal, (resource)((*policy)(dtoToAccountPolicy(&dtos[i], dtoDef))))
 	}
 
 	log.WithCtxFields(ctx).Info("Downloaded %d policies", len(retVal.asAccountPolicies()))
 	return retVal, nil
 }
 
-func dtoToAccountPolicy(dto *accountmanagement.PolicyOverview, dtoDef *accountmanagement.LevelPolicyDto) account.Policy {
-	return account.Policy{
+func dtoToAccountPolicy(dto *accountmanagement.PolicyOverview, dtoDef *accountmanagement.LevelPolicyDto) *account.Policy {
+	return &account.Policy{
 		ID:             stringutils.Sanitize(dto.Name),
 		Name:           dto.Name,
 		Level:          toAccountPolicyLevel(dto),
@@ -81,23 +89,12 @@ func toAccountPolicyLevel(dto *accountmanagement.PolicyOverview) account.PolicyL
 	return retVal
 }
 
-func (ps Policies) asAccountPolicies() account.Policies {
-	retVal := make(account.Policies, 0, len(ps))
-	for i := range ps {
-		if ps[i].isCustom() {
-			retVal = append(retVal, (account.Policy)(ps[i]))
-		}
-	}
-	return retVal
-}
-
-func (ps Policies) refOn(policyUUID ...string) []account.Ref {
-	var retVal []account.Ref
-	for _, pol := range ps {
-		for _, uuid := range policyUUID {
-			if pol.OriginObjectID == uuid {
-				retVal = append(retVal, (*account.Policy)(&pol).AsRef())
-				break
+func (rs resources) asAccountPolicies() account.Policies {
+	var retVal []account.Policy
+	for i := range rs {
+		if v, ok := rs[i].(*policy); ok {
+			if v.isCustom() {
+				retVal = append(retVal, *((*account.Policy)(v)))
 			}
 		}
 	}

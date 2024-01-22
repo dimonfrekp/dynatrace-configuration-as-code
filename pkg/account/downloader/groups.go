@@ -38,7 +38,7 @@ type (
 	}
 )
 
-func (a *Downloader) groups(ctx context.Context, policies Policies, tenants Environments) (Groups, error) {
+func (a *Downloader) groups(ctx context.Context, res resources, tenants environments) (Groups, error) {
 	log.WithCtxFields(ctx).Info("Downloading groups")
 	groupDTOs, err := a.httpClient.GetGroups(ctx, a.accountInfo.AccountUUID)
 	if err != nil {
@@ -69,7 +69,7 @@ func (a *Downloader) groups(ctx context.Context, policies Policies, tenants Envi
 		log.WithCtxFields(ctx).Debug("Downloading definition for group %q", groupDTOs[i].Name)
 		acc := account.Account{
 			Permissions: getPermissionFor("account", perDTO),
-			Policies:    policies.refOn(getPoliciesFor(binding, *g.dto.Uuid)...),
+			Policies:    res.refOn(getPoliciesFor(binding, *g.dto.Uuid)...),
 		}
 
 		var envs []account.Environment
@@ -85,7 +85,7 @@ func (a *Downloader) groups(ctx context.Context, policies Policies, tenants Envi
 			envs = append(envs, account.Environment{
 				Name:        t.id,
 				Permissions: getPermissionFor(t.id, perDTO),
-				Policies:    policies.refOn(getPoliciesFor(binding, *g.dto.Uuid)...),
+				Policies:    res.refOn(getPoliciesFor(binding, *g.dto.Uuid)...),
 			})
 
 			for k, v := range getManagementZonesFor(t.id, perDTO) {
