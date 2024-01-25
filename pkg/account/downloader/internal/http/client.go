@@ -85,6 +85,15 @@ func (c *Client) GetGroups(ctx context.Context, accUUID string) ([]accountmanage
 	return r.Items, nil
 }
 
+func (c *Client) GetPermissions(ctx context.Context) ([]accountmanagement.PermissionDto, error) {
+	r, resp, err := c.ReferenceDataAPI.GetPermissions(ctx).Execute()
+	defer closeResponseBody(resp)
+	if err = getErrorMessageFromResponse(resp, err); err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
 func (c *Client) GetPermissionFor(ctx context.Context, accUUID string, groupUUID string) (*accountmanagement.PermissionsGroupDto, error) {
 	r, resp, err := c.PermissionManagementAPI.GetGroupPermissions(ctx, accUUID, groupUUID).Execute()
 	defer closeResponseBody(resp)

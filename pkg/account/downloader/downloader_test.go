@@ -237,9 +237,9 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 				},
 				policyGroupBindings: []policyGroupBindings{
 					{
-						levelType: "account",
-						levelId:   "e34fa4d6-b53a-43e0-9be0-cccca1a4da44",
 						bindings: &accountmanagement.LevelPolicyBindingDto{
+							LevelType: "account",
+							LevelId:   "e34fa4d6-b53a-43e0-9be0-cccca1a4da44",
 							PolicyBindings: []accountmanagement.Binding{{
 								PolicyUuid: "2ff9314d-3c97-4607-bd49-460a53de1390",
 								Groups:     []string{uuidVar, uuidVar2},
@@ -248,9 +248,9 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 						err: nil,
 					},
 					{
-						levelType: "environment",
-						levelId:   "abc12345",
 						bindings: &accountmanagement.LevelPolicyBindingDto{
+							LevelType: "environment",
+							LevelId:   "abc12345",
 							PolicyBindings: []accountmanagement.Binding{{
 								PolicyUuid: "bc7df7b7-9387-45ff-974f-56573c072e4c",
 								Groups:     []string{uuidVar},
@@ -324,6 +324,12 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 						Uuid: &uuidVar2,
 						Name: "second test group",
 					},
+				},
+				permissions: []accountmanagement.PermissionDto{
+					{Id: "account-viewer", Description: "some description"},
+					{Id: "account-editor"},
+					{Id: "tenant-logviewer"},
+					{Id: "tenant-viewer"},
 				},
 				permissionsBindings: []permissionGroupBindings{
 					{
@@ -487,9 +493,8 @@ func TestDownloader_DownloadConfiguration(t *testing.T) {
 
 type (
 	policyGroupBindings struct {
-		levelType, levelId string
-		bindings           *accountmanagement.LevelPolicyBindingDto
-		err                error
+		bindings *accountmanagement.LevelPolicyBindingDto
+		err      error
 	}
 	permissionGroupBindings struct {
 		groupUUID string
@@ -504,6 +509,7 @@ type (
 		policies            []accountmanagement.PolicyOverview
 		policieDef          *accountmanagement.LevelPolicyDto
 		policyGroupBindings []policyGroupBindings
+		permissions         []accountmanagement.PermissionDto
 		permissionsBindings []permissionGroupBindings
 		groups              []accountmanagement.GetGroupDto
 		users               []accountmanagement.UsersDto
@@ -512,6 +518,7 @@ type (
 		environmentsAndMZonesError,
 		policiesError,
 		policyDefinitionError,
+		permissionsError,
 		groupsError,
 		usersError,
 		groupsForUserError error
@@ -536,9 +543,10 @@ func newMockDownloader(d mockData, t *testing.T) *downloader.Downloader {
 		client.EXPECT().GetPolicyGroupBindings(ctx, gomock.Any(), gomock.Any()).Return(&accountmanagement.LevelPolicyBindingDto{}, nil).AnyTimes()
 	} else {
 		for _, b := range d.policyGroupBindings {
-			client.EXPECT().GetPolicyGroupBindings(ctx, b.levelType, b.levelId).Return(b.bindings, b.err).MinTimes(1)
+			client.EXPECT().GetPolicyGroupBindings(ctx, b.bindings.LevelType, b.bindings.LevelId).Return(b.bindings, b.err).MinTimes(1) //TODO: it needs to be Times(1)
 		}
 	}
+	client.EXPECT().GetPermissions(ctx).Return(d.permissions, d.permissionsError).MinTimes(0).MaxTimes(1)
 	if len(d.permissionsBindings) == 0 {
 		client.EXPECT().GetPermissionFor(ctx, d.ai.AccountUUID, gomock.Any()).Return(&accountmanagement.PermissionsGroupDto{}, nil).AnyTimes()
 	} else {

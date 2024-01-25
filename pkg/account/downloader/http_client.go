@@ -29,6 +29,7 @@ type httpClient interface {
 	GetPolicyDefinition(ctx context.Context, dto accountmanagement.PolicyOverview) (*accountmanagement.LevelPolicyDto, error)
 	GetPolicyGroupBindings(ctx context.Context, levelType string, levelId string) (*accountmanagement.LevelPolicyBindingDto, error)
 	GetGroups(ctx context.Context, accUUID string) ([]accountmanagement.GetGroupDto, error)
+	GetPermissions(ctx context.Context) ([]accountmanagement.PermissionDto, error)
 	GetPermissionFor(ctx context.Context, accUUID string, groupUUID string) (*accountmanagement.PermissionsGroupDto, error)
 	GetEnvironmentsAndMZones(ctx context.Context, account string) ([]accountmanagement.TenantResourceDto, []accountmanagement.ManagementZoneResourceDto, error)
 }

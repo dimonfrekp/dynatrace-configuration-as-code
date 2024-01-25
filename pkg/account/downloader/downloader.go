@@ -79,6 +79,12 @@ func (a *Downloader) DownloadResources(ctx context.Context) (*account.Resources,
 	}
 	res = append(res, ps...)
 
+	permissions, err := a.permissions(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch policies: %w", err)
+	}
+	res = append(res, permissions...)
+
 	groups, err := a.groups(ctx, res, tenants)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch groups: %w", err)
