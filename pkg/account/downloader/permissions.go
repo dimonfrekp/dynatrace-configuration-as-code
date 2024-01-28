@@ -36,7 +36,7 @@ func (p *permission) originID() string {
 }
 
 func (p *permission) asRef() account.Ref {
-	return (account.StrReference)(p.id)
+	return account.StrReference(p.id)
 }
 
 func (a *Downloader) permissions(ctx context.Context) ([]resource, error) {

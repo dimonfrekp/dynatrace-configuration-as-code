@@ -18,11 +18,10 @@ package downloader
 
 import (
 	"context"
-	"fmt"
 	accountmanagement "github.com/dynatrace/dynatrace-configuration-as-code-core/gen/account_management"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/internal/log"
-	stringutils "github.com/dynatrace/dynatrace-configuration-as-code/v2/internal/strings"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/pkg/account"
+	"reflect"
 	"strings"
 )
 
@@ -32,44 +31,40 @@ type (
 	levelID = string
 	group   struct {
 		group         *account.Group
-		dto           *accountmanagement.GetGroupDto
+		dto           *group2
 		permissionDTO *accountmanagement.PermissionsGroupDto
 		bindings      map[levelID]*accountmanagement.LevelPolicyBindingDto
 	}
 )
 
-func (a *Downloader) groups(ctx context.Context, res resources, tenants environments) (Groups, error) {
+func (a *Downloader) groups(ctx context.Context, res resources) (Groups, error) {
 	log.WithCtxFields(ctx).Info("Downloading groups")
-	groupDTOs, err := a.httpClient.GetGroups(ctx, a.accountInfo.AccountUUID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get a list of groups for account %q from DT: %w", a.accountInfo, err)
-	}
 
-	var groups Groups
-	for i := range groupDTOs {
-		log.WithCtxFields(ctx).Debug("Downloading definition for group %q (uuid: %q)", groupDTOs[i].Name, *groupDTOs[i].Uuid)
+	var retVal Groups
+	for _, dto := range groups(res) {
+		log.WithCtxFields(ctx).Debug("Downloading definition for group %q (uuid: %q)", dto.name, dto.originObjectID)
 		g := group{
-			dto:      &groupDTOs[i],
-			bindings: make(map[levelID]*accountmanagement.LevelPolicyBindingDto, len(tenants)),
+			dto:      dto,
+			bindings: make(map[levelID]*accountmanagement.LevelPolicyBindingDto),
 		}
 
-		log.WithCtxFields(ctx).Debug("Downloading policies for group %q", groupDTOs[i].Name)
+		log.WithCtxFields(ctx).Debug("Downloading policies for group %q", dto.name)
 		binding, err := a.httpClient.GetPolicyGroupBindings(ctx, "account", a.accountInfo.AccountUUID)
 		if err != nil {
 			return nil, err
 		}
 		g.bindings["account"] = binding
 
-		log.WithCtxFields(ctx).Debug("Downloading permissions for group %q", groupDTOs[i].Name)
-		perDTO, err := a.httpClient.GetPermissionFor(ctx, a.accountInfo.AccountUUID, *groupDTOs[i].Uuid)
+		log.WithCtxFields(ctx).Debug("Downloading permissions for group %q", dto.name)
+		perDTO, err := a.httpClient.GetPermissionFor(ctx, a.accountInfo.AccountUUID, dto.originID())
 		if err != nil {
 			return nil, err
 		}
 		g.permissionDTO = perDTO
-		log.WithCtxFields(ctx).Debug("Downloading definition for group %q", groupDTOs[i].Name)
+		log.WithCtxFields(ctx).Debug("Downloading definition for group %q", dto.name)
 		acc := account.Account{
 			Permissions: getPermissionFor("account", perDTO),
-			Policies:    res.refOn(getPoliciesFor(binding, *g.dto.Uuid)...),
+			Policies:    res.refOn(getPoliciesFor(binding, dto.originID())...),
 		}
 
 		var envs []account.Environment
@@ -85,7 +80,7 @@ func (a *Downloader) groups(ctx context.Context, res resources, tenants environm
 			envs = append(envs, account.Environment{
 				Name:        t.id,
 				Permissions: getPermissionFor(t.id, perDTO),
-				Policies:    res.refOn(getPoliciesFor(binding, *g.dto.Uuid)...),
+				Policies:    res.refOn(getPoliciesFor(binding, dto.originID())...),
 			})
 
 			for k, v := range getManagementZonesFor(t.id, perDTO) {
@@ -99,21 +94,21 @@ func (a *Downloader) groups(ctx context.Context, res resources, tenants environm
 		}
 
 		g.group = &account.Group{
-			ID:             stringutils.Sanitize(g.dto.Name),
-			Name:           g.dto.Name,
-			Description:    g.dto.GetDescription(),
+			ID:             dto.id,
+			Name:           dto.name,
+			Description:    dto.description,
 			Account:        effectiveAccount(acc),
 			Environment:    effectiveEnvironments(envs),
 			ManagementZone: mzs,
-			OriginObjectID: *g.dto.Uuid,
+			OriginObjectID: dto.originObjectID,
 		}
 
-		groups = append(groups, g)
+		retVal = append(retVal, g)
 	}
 
-	log.WithCtxFields(ctx).Info("Downloaded %d groups", len(groups))
+	log.WithCtxFields(ctx).Info("Downloaded %d groups", len(retVal))
 
-	return groups, nil
+	return retVal, nil
 }
 
 func (g Groups) asAccountGroups() map[account.GroupId]account.Group {
@@ -126,7 +121,7 @@ func (g Groups) asAccountGroups() map[account.GroupId]account.Group {
 
 func (g Groups) refOn(groupUUID string) account.Ref {
 	for i := range g {
-		if *g[i].dto.Uuid == groupUUID {
+		if g[i].dto.originObjectID == groupUUID {
 			return account.Reference{Id: g[i].group.ID}
 		}
 	}
@@ -191,4 +186,18 @@ func effectiveEnvironments(es []account.Environment) []account.Environment {
 		}
 	}
 	return retVal
+}
+
+func groups(res []resource) []*group2 {
+	var retVal []*group2
+	for i := range res {
+		if v, ok := res[i].(*group2); ok {
+			retVal = append(retVal, v)
+		}
+	}
+	return retVal
+}
+
+func get(t reflect.Type) []any {
+
 }

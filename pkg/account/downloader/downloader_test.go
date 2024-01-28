@@ -543,7 +543,7 @@ func newMockDownloader(d mockData, t *testing.T) *downloader.Downloader {
 		client.EXPECT().GetPolicyGroupBindings(ctx, gomock.Any(), gomock.Any()).Return(&accountmanagement.LevelPolicyBindingDto{}, nil).AnyTimes()
 	} else {
 		for _, b := range d.policyGroupBindings {
-			client.EXPECT().GetPolicyGroupBindings(ctx, b.bindings.LevelType, b.bindings.LevelId).Return(b.bindings, b.err).MinTimes(1) //TODO: it needs to be Times(1)
+			client.EXPECT().GetPolicyGroupBindings(ctx, b.bindings.LevelType, b.bindings.LevelId).Return(b.bindings, b.err).Times(1) //TODO: it needs to be Times(1)
 		}
 	}
 	client.EXPECT().GetPermissions(ctx).Return(d.permissions, d.permissionsError).MinTimes(0).MaxTimes(1)
@@ -551,11 +551,11 @@ func newMockDownloader(d mockData, t *testing.T) *downloader.Downloader {
 		client.EXPECT().GetPermissionFor(ctx, d.ai.AccountUUID, gomock.Any()).Return(&accountmanagement.PermissionsGroupDto{}, nil).AnyTimes()
 	} else {
 		for _, b := range d.permissionsBindings {
-			client.EXPECT().GetPermissionFor(ctx, d.ai.AccountUUID, b.groupUUID).Return(b.bindings, b.err).AnyTimes()
+			client.EXPECT().GetPermissionFor(ctx, d.ai.AccountUUID, b.groupUUID).Return(b.bindings, b.err).Times(1)
 		}
 	}
 	client.EXPECT().GetGroups(ctx, d.ai.AccountUUID).Return(d.groups, d.groupsError).MinTimes(0).MaxTimes(1)
-	client.EXPECT().GetUsers(ctx, d.ai.AccountUUID).Return(d.users, d.usersError).MinTimes(0).MaxTimes(1)
+	client.EXPECT().GetUsers(ctx, d.ai.AccountUUID).Return(d.users, d.usersError).MinTimes(0).MaxTimes(2) //TODO: return to max 1
 	client.EXPECT().GetGroupsForUser(ctx, userEmail(d.users), d.ai.AccountUUID).Return(d.userGroups, d.groupsForUserError).AnyTimes()
 
 	return downloader.New4Test(d.ai, client)

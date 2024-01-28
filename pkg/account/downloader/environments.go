@@ -19,7 +19,6 @@ package downloader
 import (
 	"context"
 	"fmt"
-	accountmanagement "github.com/dynatrace/dynatrace-configuration-as-code-core/gen/account_management"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/internal/log"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/pkg/account"
 )
@@ -102,70 +101,30 @@ func (e environments) getMzoneName(originID string) string {
 	return ""
 }
 
-func (a *Downloader) environments(ctx context.Context) (environments, resources, error) {
+func (a *Downloader) environments(ctx context.Context) (resources, error) {
 	log.WithCtxFields(ctx).Info("Fetching environments")
-
 	envDTOs, mzoneDTOs, err := a.httpClient.GetEnvironmentsAndMZones(ctx, a.accountInfo.AccountUUID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get a list of environments and management zones for account %q from DT: %w", a.accountInfo, err)
+		return nil, fmt.Errorf("failed to get a list of environments and management zones for account %q from DT: %w", a.accountInfo, err)
 	}
 
-	retVal := make(environments, 0, len(envDTOs))
-	for i := range envDTOs {
-		e := fromTenantResourceDto(envDTOs[i])
-		e.managementZones = fromManagementZoneResourceDto(mzoneDTOs, envDTOs[i].Id)
-		retVal = append(retVal, e)
+	var ret []resource
+	ret = append(ret, &acc{
+		name:       a.accountInfo.Name,
+		originUUID: a.accountInfo.AccountUUID,
+	})
+	for _, dto := range envDTOs {
+		ret = append(ret, &environment2{
+			id:   dto.Id,
+			name: dto.Name,
+		})
 	}
-
-	var retVal2 []resource
-	retVal2 = append(retVal2, accountInfoToAcc(a.accountInfo))
-	for i := range envDTOs {
-		retVal2 = append(retVal2, dtoToEnvironment(envDTOs[i]))
+	for _, dto := range mzoneDTOs {
+		ret = append(ret, &managementZone2{
+			name:     dto.Name,
+			id:       dto.Id,
+			parentID: dto.Parent,
+		})
 	}
-	for i := range mzoneDTOs {
-		retVal2 = append(retVal2, dtoToManagementZone(mzoneDTOs[i]))
-	}
-
-	log.WithCtxFields(ctx).Info("Fetched environments: %q", retVal)
-	return retVal, retVal2, nil
-}
-
-func fromTenantResourceDto(dto accountmanagement.TenantResourceDto) environment {
-	return environment{
-		id:   dto.Id,
-		name: dto.Name,
-	}
-}
-
-func fromManagementZoneResourceDto(dtos []accountmanagement.ManagementZoneResourceDto, tenantID string) []managementZone {
-	var retVal []managementZone
-	for _, dto := range dtos {
-		if dto.Parent == tenantID {
-			retVal = append(retVal, managementZone{
-				name:     dto.Name,
-				originID: dto.Id,
-			})
-		}
-	}
-	return retVal
-}
-
-func accountInfoToAcc(a *account.AccountInfo) *acc {
-	return &acc{
-		name:       a.Name,
-		originUUID: a.AccountUUID,
-	}
-}
-func dtoToEnvironment(dto accountmanagement.TenantResourceDto) *environment2 {
-	return &environment2{
-		id:   dto.Id,
-		name: dto.Name,
-	}
-}
-func dtoToManagementZone(dto accountmanagement.ManagementZoneResourceDto) *managementZone2 {
-	return &managementZone2{
-		name:     dto.Name,
-		id:       dto.Id,
-		parentID: dto.Parent,
-	}
+	return ret, nil
 }

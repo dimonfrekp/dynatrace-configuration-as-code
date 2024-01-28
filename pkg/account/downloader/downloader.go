@@ -21,22 +21,15 @@ import (
 	"fmt"
 	"github.com/dynatrace/dynatrace-configuration-as-code-core/api/clients/accounts"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/internal/log"
+	stringutils "github.com/dynatrace/dynatrace-configuration-as-code/v2/internal/strings"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/pkg/account"
 	"github.com/dynatrace/dynatrace-configuration-as-code/v2/pkg/account/downloader/internal/http"
 )
 
-type (
-	Downloader struct {
-		httpClient  httpClient
-		accountInfo *account.AccountInfo
-	}
-
-	resources []resource
-	resource  interface {
-		originID() string
-		asRef() account.Ref
-	}
-)
+type Downloader struct {
+	httpClient  httpClient
+	accountInfo *account.AccountInfo
+}
 
 var _ httpClient = (*http.Client)(nil)
 
@@ -60,32 +53,16 @@ func (rs resources) refOn(originID ...string) []account.Ref {
 	return retVal
 }
 
-//resources: account/tenant/managementZone; policy/permission; groups; users
 //bindings: account/tenant/managementZone-policy/permission-group; user-group
 
 func (a *Downloader) DownloadResources(ctx context.Context) (*account.Resources, error) {
 	log.WithCtxFields(ctx).Info("Starting download")
-	var res resources
-
-	tenants, r1, err := a.environments(ctx)
+	res, err := a.getAllResources(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch environments: %w", err)
+		return nil, err
 	}
-	res = append(res, r1...)
 
-	ps, err := a.policies(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch policies: %w", err)
-	}
-	res = append(res, ps...)
-
-	permissions, err := a.permissions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch policies: %w", err)
-	}
-	res = append(res, permissions...)
-
-	groups, err := a.groups(ctx, res, tenants)
+	groups, err := a.groups(ctx, res)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch groups: %w", err)
 	}
@@ -102,4 +79,35 @@ func (a *Downloader) DownloadResources(ctx context.Context) (*account.Resources,
 	}
 
 	return &r, nil
+}
+
+func (a *Downloader) users2(ctx context.Context) ([]resource, error) {
+	log.WithCtxFields(ctx).Info("Downloading users")
+	dtos, err := a.httpClient.GetUsers(ctx, a.accountInfo.AccountUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get a list of users for account %q from DT: %w", a.accountInfo, err)
+	}
+	retVal := make([]resource, 0, len(dtos))
+	for i := range dtos {
+		retVal = append(retVal, user2(dtos[i].Email))
+	}
+	return retVal, nil
+}
+
+func (a *Downloader) groups2(ctx context.Context) ([]resource, error) {
+	log.WithCtxFields(ctx).Info("Downloading groups")
+	dtos, err := a.httpClient.GetGroups(ctx, a.accountInfo.AccountUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get a list of groups for account %q from DT: %w", a.accountInfo, err)
+	}
+	retval := make([]resource, 0, len(dtos))
+	for _, dto := range dtos {
+		retval = append(retval, &group2{
+			id:             stringutils.Sanitize(dto.Name),
+			name:           dto.Name,
+			description:    dto.GetDescription(),
+			originObjectID: dto.GetUuid(),
+		})
+	}
+	return retval, nil
 }
