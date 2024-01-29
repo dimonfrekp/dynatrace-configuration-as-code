@@ -80,6 +80,10 @@ func Delete(ctx context.Context, client dtclient.Client, theApi api.API, entries
 		}
 	}
 
+	if err != nil {
+		deleteErrs++
+	}
+
 	if len(delValues) == 0 {
 		logger.Debug("No values found to delete for type %q.", targetApi)
 		return err
