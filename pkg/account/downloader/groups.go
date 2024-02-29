@@ -125,6 +125,9 @@ func (g Groups) asAccountGroups() map[account.GroupId]account.Group {
 }
 
 func (g Groups) refOn(groupUUID string) account.Ref {
+
+	/// what if it can't be found?
+	// E.g. user & group created in parallel, but group can't be fetched yet
 	for i := range g {
 		if *g[i].dto.Uuid == groupUUID {
 			return account.Reference{Id: g[i].group.ID}
@@ -136,6 +139,8 @@ func (g Groups) refOn(groupUUID string) account.Ref {
 func (g Groups) refFromDTOs(dtos []accountmanagement.AccountGroupDto) []account.Ref {
 	var retVal []account.Ref
 	for _, dto := range dtos {
+		// why is there a call to a function when we can iterate it here?
+		// if refOn returns nil, we have a nil in the array, thus doing som a.ID later on <nil>.ID panics
 		retVal = append(retVal, g.refOn(dto.Uuid))
 	}
 	return retVal
