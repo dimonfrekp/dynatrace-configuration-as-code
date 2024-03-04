@@ -142,11 +142,11 @@ func TestDownload_KeyUserActionWeb(t *testing.T) {
 	c.EXPECT().ListConfigs(ctx, apiEq(apiMap[api.ApplicationWeb])).Return([]dtclient.Value{{Id: "applicationID", Name: "web-application"}}, nil).Times(2)
 	c.EXPECT().ListConfigs(ctx, apiEq(apiMap[api.KeyUserActionsWeb].Resolve("applicationID"))).Return([]dtclient.Value{{Id: "APPLICATION_METHOD-ID", Name: "the_name"}}, nil)
 	c.EXPECT().ReadConfigById(apiMap[api.ApplicationWeb], "applicationID").Return([]byte(`{"keyUserActionList":[{"name":"the_name","actionType":"Load","domain":"dt.com","meIdentifier":"APPLICATION_METHOD-ID"}]}`), nil)
-	c.EXPECT().ReadConfigById(apiEq(apiMap[api.KeyUserActionsWeb].Resolve("applicationID")), "applicationID").Return([]byte(`{"keyUserActionList":[{"name":"the_name","actionType":"Load","domain":"dt.com","meIdentifier":"APPLICATION_METHOD-ID"}]}`), nil)
+	c.EXPECT().ReadConfigById(apiEq(apiMap[api.KeyUserActionsWeb].Resolve("applicationID")), "").Return([]byte(`{"keyUserActionList":[{"name":"the_name","actionType":"Load","domain":"dt.com","meIdentifier":"APPLICATION_METHOD-ID"}]}`), nil)
 
 	configurations, err := Download(c, "project", apiMap, map[string]ContentFilter{})
 	assert.NoError(t, err)
-	assert.Len(t, configurations, 1)
+	assert.Len(t, configurations, 2)
 	gotConfig := configurations["key-user-actions-web"][0]
 	assert.Len(t, configurations["key-user-actions-web"], 1)
 	assert.Equal(t, reference.New("project", "application-web", "applicationID", "id"), gotConfig.Parameters[config.ScopeParameter])
@@ -388,15 +388,17 @@ func TestDownload_SkippedParentsSkipChildren(t *testing.T) {
 		return nil, nil
 	}).Times(2)
 
+	parentAPI := api.API{
+		ID:            "PARENT_API_ID",
+		URLPath:       "PARENT_API_PATH",
+		NonUniqueName: true}
+
 	apiMap := api.APIs{
-		"PARENT_API_ID": api.API{
-			ID:            "PARENT_API_ID",
-			URLPath:       "PARENT_API_PATH",
-			NonUniqueName: true},
+		"PARENT_API_ID": parentAPI,
 		"CHILD_API_ID": api.API{ID: "CHILD_API_ID",
 			URLPath:       "CHILD_API_PATH",
 			NonUniqueName: false,
-			Parent:        "PARENT_API_ID"}}
+			Parent:        &parentAPI}}
 
 	contentFilters := map[string]ContentFilter{
 		"PARENT_API_ID": {
@@ -420,15 +422,17 @@ func TestDownload_SingleConfigurationChild(t *testing.T) {
 
 	c.EXPECT().ReadConfigById(gomock.Any(), gomock.Any()).Return([]byte("{}"), nil).AnyTimes()
 
+	parentAPI := api.API{
+		ID:            "PARENT_API_ID",
+		URLPath:       "PARENT_API_PATH",
+		NonUniqueName: true}
+
 	apiMap := api.APIs{
-		"PARENT_API_ID": api.API{
-			ID:            "PARENT_API_ID",
-			URLPath:       "PARENT_API_PATH",
-			NonUniqueName: true},
+		"PARENT_API_ID": parentAPI,
 		"CHILD_API_ID": api.API{ID: "CHILD_API_ID",
 			URLPath:             "CHILD_API_PATH",
 			NonUniqueName:       false,
-			Parent:              "PARENT_API_ID",
+			Parent:              &parentAPI,
 			SingleConfiguration: true}}
 
 	contentFilters := map[string]ContentFilter{
@@ -442,5 +446,5 @@ func TestDownload_SingleConfigurationChild(t *testing.T) {
 	require.Len(t, configurations, 2, "Expected two configurations")
 	require.Len(t, configurations["PARENT_API_ID"], 1)
 	require.Len(t, configurations["CHILD_API_ID"], 1)
-	assert.Equal(t, configurations["PARENT_API_ID"][0].Coordinate.ConfigId, configurations["CHILD_API_ID"][0].Coordinate.ConfigId, "Single child config should have the same config ID as parent")
+	assert.Equal(t, configurations["PARENT_API_ID"][0].Coordinate.ConfigId+configurations["PARENT_API_ID"][0].Coordinate.ConfigId, configurations["CHILD_API_ID"][0].Coordinate.ConfigId, "Single child config should have the same config ID as parent")
 }
