@@ -53,6 +53,11 @@ type Value struct {
 
 	// Type is used by synthetic-locations to indicate whether it is a PRIVATE location or not.
 	Type *string `json:"type,omitempty"`
+
+	// ActionType is one of the three properties used to uniquely identify key-user-action-web objects.
+	ActionType *string `json:"actionType,omitempty"`
+	// Domain is one of the three properties used to uniquely identify key-user-action-web objects.
+	Domain *string `json:"domain,omitempty"`
 }
 
 type SyntheticValue struct {

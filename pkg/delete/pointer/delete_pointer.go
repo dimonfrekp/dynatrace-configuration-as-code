@@ -33,6 +33,10 @@ type DeletePointer struct {
 
 	// Scope is the Entity ID / information necessary to delete the entity. This is required for sub-path entities.
 	Scope string
+
+	// should be more generalized, just hacked in to show how we could check this
+	Domain     string
+	ActionType string
 }
 
 func (d DeletePointer) AsCoordinate() coordinate.Coordinate {

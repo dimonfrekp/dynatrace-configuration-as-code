@@ -628,6 +628,11 @@ func TestSplitConfigsForDeletion(t *testing.T) {
 
 func TestConfigsWithParent(t *testing.T) {
 	theAPI := api.NewAPIs()["key-user-actions-mobile"]
+	kuaWebAPI := api.NewAPIs()["key-user-actions-web"]
+	domainA := "domainA.com"
+	domainB := "domainB.com"
+	loadAction := "Load"
+	customAction := "Custom"
 
 	type (
 		listMock struct {
@@ -673,6 +678,67 @@ func TestConfigsWithParent(t *testing.T) {
 					{
 						Type:       "key-user-actions-mobile",
 						Identifier: "test",
+						Scope:      "application name",
+					},
+				},
+			},
+		},
+		{
+			name: "key-user-action-web matches on full identifying tuple",
+			mock: mockData{
+				parentList: &listMock{
+					api:      api.NewAPIs()[kuaWebAPI.Parent.ID],
+					response: []dtclient.Value{{Id: "APP-ID", Name: "application name"}},
+				},
+				list: &listMock{
+					api: kuaWebAPI.Resolve("APP-ID"),
+					response: []dtclient.Value{
+						{Id: "id1", Name: "test", Domain: &domainA, ActionType: &loadAction},
+						{Id: "id2", Name: "other-name", Domain: &domainA, ActionType: &loadAction},
+						{Id: "id3", Name: "test", Domain: &domainB, ActionType: &loadAction},
+						{Id: "id4", Name: "test", Domain: &domainA, ActionType: &customAction},
+					},
+				},
+				del: &delMock{
+					api: kuaWebAPI.Resolve("APP-ID"),
+					id:  "id4",
+				},
+			},
+			forDelete: delete.DeleteEntries{
+				"key-user-actions-web": {
+					{
+						Type:       "key-user-actions-web",
+						Identifier: "test",
+						Domain:     domainA,
+						ActionType: customAction,
+						Scope:      "application name",
+					},
+				},
+			},
+		},
+		{
+			name: "key-user-action-web does not attempt delete if no value matches fully",
+			mock: mockData{
+				parentList: &listMock{
+					api:      api.NewAPIs()[kuaWebAPI.Parent.ID],
+					response: []dtclient.Value{{Id: "APP-ID", Name: "application name"}},
+				},
+				list: &listMock{
+					api: kuaWebAPI.Resolve("APP-ID"),
+					response: []dtclient.Value{
+						{Id: "id1", Name: "test", Domain: &domainA, ActionType: &loadAction},
+						{Id: "id2", Name: "other-name", Domain: &domainA, ActionType: &loadAction},
+						{Id: "id3", Name: "test", Domain: &domainB, ActionType: &loadAction},
+					},
+				},
+			},
+			forDelete: delete.DeleteEntries{
+				"key-user-actions-web": {
+					{
+						Type:       "key-user-actions-web",
+						Identifier: "test",
+						Domain:     domainA,
+						ActionType: customAction,
 						Scope:      "application name",
 					},
 				},

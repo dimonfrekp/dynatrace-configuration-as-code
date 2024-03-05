@@ -121,7 +121,7 @@ func findIDToDelete(ptr pointer.DeletePointer, values []dtclient.Value) (string,
 	var toDeleteByName []dtclient.Value
 	var toDeleteByID []dtclient.Value
 	for _, v := range values {
-		if v.Name == ptr.Identifier {
+		if v.Name == ptr.Identifier && (v.Domain == nil || *v.Domain == ptr.Domain) && (v.ActionType == nil || *v.ActionType == ptr.ActionType) {
 			toDeleteByName = append(toDeleteByName, v)
 		}
 		if v.Id == ptr.Identifier {
