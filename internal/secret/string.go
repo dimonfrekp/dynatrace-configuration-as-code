@@ -20,7 +20,7 @@ package secret
 type MaskedString string
 
 func (s MaskedString) String() string {
-	return "****"
+	return "😸🙀😻😹"
 }
 
 // Value returns the actual sensitive information as string
