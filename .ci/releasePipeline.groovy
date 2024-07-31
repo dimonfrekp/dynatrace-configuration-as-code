@@ -18,9 +18,9 @@ pipeline {
             }
             steps {
                 script {
-                    Context ctx
+                    Release1 ctx
                     stage("Pre-build steps") {
-                        ctx = new Context(newGithubRelease())
+                        ctx = newRelease1()
                         createEmptyDirectory(dir: Release.BINARIES)
                         getSignClient()
                         ctx.version = getVersionFromGitTagName(TAG_NAME)
@@ -72,7 +72,7 @@ void errorIfArgumentIsNull(Map args = [callerName: null, name: null, value: null
     }
 }
 
-boolean isRelease(Context ctx) {
+boolean isRelease(Release1 ctx) {
     return isRelease(version: ctx.version)
 }
 
@@ -86,7 +86,7 @@ boolean isReleaseCandidate(Map args = [version: null]) {
     return args.version ==~ /^\d+\.\d+\.\d+-rc\d*$/
 }
 
-boolean isFinal(Context ctx) {
+boolean isFinal(Release1 ctx) {
     return isFinal(version: ctx.version)
 }
 
@@ -151,7 +151,7 @@ String getVersionFromGitTagName(String tagName) {
 }
 
 
-void releaseBinary(Context ctx, Release release) {
+void releaseBinary(Release1 ctx, Release release) {
     stage("build ${release.os}/${release.arch}") {
         def knownArchs = ["arm64", "amd64", "386"]
 
@@ -177,7 +177,7 @@ void releaseBinary(Context ctx, Release release) {
     }
 }
 
-void releaseDockerContainer(Context ctx) {
+void releaseDockerContainer(Release1 ctx) {
     stage("Build Docker") {
         def dockerTools = load(".ci/jenkins/tools/docker.groovy")
 
@@ -260,7 +260,7 @@ def pushToDtRepository(Map args = [source: null, dest: null]) {
     }
 }
 
-void sbom(Context ctx) {
+void sbom(Release1 ctx) {
     stage("Generate SBOM") {
         def sbomTools = load(".ci/jenkins/tools/sbom.groovy")
 
@@ -274,31 +274,32 @@ void sbom(Context ctx) {
 }
 
 
-class Context {
+Release1 newRelease1() {
+    retrun new Release1(
+        new GithubRelease(this, load(".ci/jenkins/tools/github.groovy"))
+    )
+}
+
+class Release1 {
     String version
     GithubRelease githubRelease
 
-    Context(def githubRelease) {
+    Release1(def githubRelease) {
         this.githubRelease = githubRelease
     }
 }
 
-
-GithubRelease newGithubRelease() {
-    Map args = [:]
-    args.githubTools = load(".ci/jenkins/tools/github.groovy")
-    return new GithubRelease(args)
-}
-
 class GithubRelease {
-    private githubTools
+    private def githubTools
+    private def steps
     String releaseId
 
-    GithubRelease(Map args = [githubTools: null]) {
-        githubTools = args.githubTools
+    GithubRelease(steps, githubTools) {
+        this.steps = steps
+        this.githubTools = githubTools
     }
 
-    String createNew(Context ctx) {
+    String createNew(Release ctx) {
         this.releaseId = githubTools.createRelease(version: ctx.version)
         return this.releaseId
     }
@@ -363,11 +364,11 @@ class Release {
             return "${BINARIES}/${binary.shaName()}"
         }
 
-        String dtRepositoryPath(Context ctx) {
+        String dtRepositoryPath(Release1 ctx) {
             return "monaco/${ctx.version}/${binary.name()}"
         }
 
-        String dtRepositoryArtifactoryPathSha(Context ctx) {
+        String dtRepositoryArtifactoryPathSha(Release1 ctx) {
             return "monaco/${ctx.version}/${binary.shaName()}"
         }
     }
